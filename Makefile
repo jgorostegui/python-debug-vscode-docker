@@ -9,7 +9,13 @@ DOCKER_CMD_RUN = uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --re
 DOCKER_CMD_DEBUG = python -m debugpy --listen $(APP_HOST):$(DEBUG_PORT) --wait-for-client -m uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
 DOCKER_CMD_DEBUG_TEST = python -m debugpy --listen $(APP_HOST):$(DEBUG_PORT) --wait-for-client -m pytest -v tests/
 
-run: # Run the app without debugging
+run-script: # Run the script
+	python src/text_adventure.py
+
+run-script-debug: # Run the script in debug mode
+	PYTHONBREAKPOINT=pdb.set_trace python -m pdb src/text_adventure.py
+
+run-app: # Run the app without debugging
 	uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
 
 run-app-debug: # Run the app with PDB debugging
