@@ -1,41 +1,48 @@
 .PHONY: run test run-debug run-app-debug test-debug docker-run docker-debug docker-debug-test docker-stop
 
 export PYTHONBREAKPOINT:=$(or $(PYTHONBREAKPOINT), 0)
-export APP_HOST:=$(or $(APP_HOST), 0.0.0.0)
-export APP_PORT:=$(or $(APP_PORT), 8008)
-export DEBUG_PORT:=$(or $(DEBUG_PORT), 5678)
 
-DOCKER_CMD_RUN = uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
-DOCKER_CMD_DEBUG = python -m debugpy --listen $(APP_HOST):$(DEBUG_PORT) --wait-for-client -m uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
-DOCKER_CMD_DEBUG_TEST = python -m debugpy --listen $(APP_HOST):$(DEBUG_PORT) --wait-for-client -m pytest -v tests/
+help: ## Show this help message
+	@echo 'Usage:'
+	@echo '  make [target]'
+	@echo
+	@echo 'Targets:'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-run-script: # Run the script
+# Local Development Commands
+
+run-script: ## Run the script
 	python src/text_adventure.py
 
-run-script-debug: # Run the script in debug mode
+run-script-debug: ## Run the script in debug mode
 	PYTHONBREAKPOINT=pdb.set_trace python -m pdb src/text_adventure.py
 
-run-app: # Run the app without debugging
-	uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
+run-app: ## Run the application locally (no debug)
+	uvicorn app.main:app --host 0.0.0.0 --port 8008 --reload
 
-run-app-debug: # Run the app with PDB debugging
-	PYTHONBREAKPOINT=pdb.set_trace uvicorn app.main:app --host $(APP_HOST) --port $(APP_PORT) --reload
+run-app-debug: ## Run the application locally with debugger
+	python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port 8008 --reload
 
-test: # Run the tests
-	pytest -v -s tests/
+test: ## Run tests locally
+	pytest -v tests/
+
+test-debug: ## Run tests locally with debugger
+	python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m pytest -v tests/
 
 ##################################################################################
 # Run commands inside docker containers
 ##################################################################################
 
-docker-run: # Run the app inside a docker container
-	DOCKER_CMD="$(DOCKER_CMD_RUN)" docker-compose up --build
+docker-run: ## Run the application in Docker
+	docker-compose -f docker-compose.base.yml up --build
 
-docker-debug: # Run the app inside a docker container in debug mode
-	DOCKER_CMD="$(DOCKER_CMD_DEBUG)" docker-compose up --build
+docker-debug: ## Debug the application in Docker
+	docker-compose -f docker-compose.debug.yml up --build
 
-docker-debug-test: # Run the tests inside a docker container in debug mode
-	DOCKER_CMD="$(DOCKER_CMD_DEBUG_TEST)" docker-compose up --build
+docker-test-debug: ## Debug tests in Docker
+	docker-compose -f docker-compose.test-debug.yml up --build
 
-docker-stop: # Stop the docker containers
-	docker-compose down
+clean: ## Clean up Docker resources
+	docker-compose -f docker-compose.base.yml down
+	docker-compose -f docker-compose.debug.yml down
+	docker-compose -f docker-compose.test.yml down

@@ -1,0 +1,22 @@
+[project]
+name = "python-debug-vscode-docker"
+version = "0.1.0"
+description = "A FastAPI example with debugging setup"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pytest",
+    "debugpy",
+    "httpx"
+]
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "debugpy"
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]

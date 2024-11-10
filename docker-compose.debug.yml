@@ -1,0 +1,13 @@
+services:
+  app-debug:
+    build: .
+    ports:
+      - "8008:8008"
+      - "5678:5678"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONBREAKPOINT=debugpy.breakpoint
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port 8008 --reload
+
